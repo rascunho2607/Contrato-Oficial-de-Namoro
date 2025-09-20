@@ -323,6 +323,37 @@
     <div class="hearts" id="hearts"></div>
     
     <div class="container">
+        <!-- Seção para quando já existe foto salva -->
+        <div class="document" id="photo-display" style="display: none;">
+            <div class="watermark">OFICIAL</div>
+            
+            <div class="header">
+                <h1 class="title">Relacionamento Oficializado! 💕</h1>
+                <p class="subtitle">Prova Fotográfica do Melhor "Sim" da História</p>
+            </div>
+            
+            <div style="text-align: center; margin: 30px 0;">
+                <img id="saved-photo" alt="Foto oficial do relacionamento" style="max-width: 100%; border-radius: 15px; border: 4px solid #ff6b6b; box-shadow: 0 5px 15px rgba(0,0,0,0.3);" />
+            </div>
+            
+            <div style="text-align: center; padding: 20px; background: rgba(255, 182, 193, 0.2); border-radius: 10px; margin: 20px 0;">
+                <h3 style="color: #8B4513; margin-bottom: 15px;">📋 Status do Relacionamento:</h3>
+                <p style="font-size: 1.2em; color: #ff6b6b; font-weight: 600;">✅ OFICIALMENTE NAMORANDO ✅</p>
+                <p style="color: #666; margin-top: 10px;">
+                    Contrato assinado, foto capturada, coração conquistado! 💖
+                </p>
+            </div>
+            
+            <div class="buttons">
+                <button class="btn btn-accept" onclick="showContract()">
+                    📜 REVER O CONTRATO ÉPICO 📜
+                </button>
+                <button class="btn btn-reject" onclick="takeNewPhoto()">
+                    📸 NOVA FOTO OFICIAL 📸
+                </button>
+            </div>
+        </div>
+
         <div class="document" id="contract">
             <div class="watermark">OFICIAL</div>
             
@@ -405,6 +436,47 @@
             <p style="font-size: 1.1em; font-weight: 600; color: #ff6b6b; margin-top: 20px;">
                 Bem-vinda à melhor decisão da sua vida! ❤️
             </p>
+            <div style="margin-top: 30px;">
+                <p style="font-size: 1.2em; margin-bottom: 20px;">📸 Para oficializar este momento histórico, que tal uma foto para a posteridade?</p>
+                <button class="btn btn-accept" onclick="takePhoto()" style="margin: 10px;">
+                    📷 CAPTURAR MOMENTO ÉPICO 📷
+                </button>
+            </div>
+        </div>
+
+        <div class="reaction" id="photo-section" style="display: none;">
+            <h2>📸 Hora da Foto Oficial! 📸</h2>
+            <p>📱 Sorria! Esta foto será eternizada como prova de que você tomou a melhor decisão da vida!</p>
+            <div style="margin: 20px 0;">
+                <video id="video" width="320" height="240" autoplay style="border-radius: 10px; display: none;"></video>
+                <canvas id="canvas" width="320" height="240" style="border-radius: 10px; display: none;"></canvas>
+                <img id="photo" alt="Foto capturada da câmera" style="border-radius: 10px; max-width: 100%; display: none;" />
+            </div>
+            <div id="camera-buttons" style="display: none;">
+                <button class="btn btn-accept" onclick="capturePhoto()" style="margin: 10px;">
+                    📸 CLICK! 📸
+                </button>
+                <button class="btn btn-reject" onclick="retakePhoto()" style="margin: 10px;">
+                    🔄 TENTAR NOVAMENTE 🔄
+                </button>
+            </div>
+            <div id="photo-buttons" style="display: none;">
+                <button class="btn btn-accept" onclick="savePhoto()" style="margin: 10px;">
+                    💾 PERFEITA! SALVAR 💾
+                </button>
+                <button class="btn btn-reject" onclick="retakePhoto()" style="margin: 10px;">
+                    🤳 TIRAR OUTRA 🤳
+                </button>
+            </div>
+        </div>
+
+        <div class="reaction" id="photo-saved" style="display: none;">
+            <h2>💝 FOTO SALVA COM SUCESSO! 💝</h2>
+            <p>🎊 Agora temos uma recordação oficial do momento em que você se tornou minha namorada!</p>
+            <p>📱 Esta foto aparecerá sempre que você visitar nosso contrato oficial!</p>
+            <p style="font-size: 1.1em; font-weight: 600; color: #ff6b6b; margin-top: 20px;">
+                Status: Relacionamento Documentado e Fotografado! 📸❤️
+            </p>
         </div>
         
         <div class="reaction reaction-reject" id="reject-reaction">
@@ -425,6 +497,8 @@
     <div class="fireworks" id="fireworks"></div>
     
     <script>
+        let stream = null;
+        
         // Criar corações flutuantes
         function createHearts() {
             const heartsContainer = document.getElementById('hearts');
@@ -440,6 +514,31 @@
                 heart.style.animationDuration = (Math.random() * 4 + 4) + 's';
                 heartsContainer.appendChild(heart);
             }
+        }
+        
+        // Verificar se já existe foto salva ao carregar a página
+        function checkSavedPhoto() {
+            const savedPhoto = localStorage.getItem('contractPhoto');
+            if (savedPhoto) {
+                document.getElementById('saved-photo').src = savedPhoto;
+                document.getElementById('photo-display').style.display = 'block';
+                document.getElementById('contract').style.display = 'none';
+            }
+        }
+        
+        // Mostrar o contrato original
+        function showContract() {
+            document.getElementById('photo-display').style.display = 'none';
+            document.getElementById('contract').style.display = 'block';
+            hideAllReactions();
+        }
+        
+        // Esconder todas as reações
+        function hideAllReactions() {
+            document.getElementById('accept-reaction').style.display = 'none';
+            document.getElementById('reject-reaction').style.display = 'none';
+            document.getElementById('photo-section').style.display = 'none';
+            document.getElementById('photo-saved').style.display = 'none';
         }
         
         // Função para aceitar o contrato
@@ -464,6 +563,91 @@
             
             // Adicionar mais corações melancólicos
             setTimeout(createMelancholicHearts, 500);
+        }
+        
+        // Iniciar captura de foto
+        function takePhoto() {
+            hideAllReactions();
+            document.getElementById('photo-section').style.display = 'block';
+            startCamera();
+        }
+        
+        // Tirar nova foto (quando já existe uma)
+        function takeNewPhoto() {
+            document.getElementById('photo-display').style.display = 'none';
+            document.getElementById('photo-section').style.display = 'block';
+            startCamera();
+        }
+        
+        // Iniciar câmera
+        async function startCamera() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                const video = document.getElementById('video');
+                video.srcObject = stream;
+                video.style.display = 'block';
+                document.getElementById('camera-buttons').style.display = 'block';
+                document.getElementById('photo-buttons').style.display = 'none';
+                document.getElementById('photo').style.display = 'none';
+                document.getElementById('canvas').style.display = 'none';
+            } catch (err) {
+                alert('Ops! Não conseguimos acessar sua câmera. Que tal um selfie mental? 📸😅');
+                console.error('Erro ao acessar câmera:', err);
+            }
+        }
+        
+        // Capturar foto
+        function capturePhoto() {
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvas');
+            const photo = document.getElementById('photo');
+            const context = canvas.getContext('2d');
+            
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0);
+            
+            const imageData = canvas.toDataURL('image/png');
+            photo.src = imageData;
+            photo.style.display = 'block';
+            
+            video.style.display = 'none';
+            document.getElementById('camera-buttons').style.display = 'none';
+            document.getElementById('photo-buttons').style.display = 'block';
+        }
+        
+        // Tirar foto novamente
+        function retakePhoto() {
+            const video = document.getElementById('video');
+            const photo = document.getElementById('photo');
+            
+            video.style.display = 'block';
+            photo.style.display = 'none';
+            document.getElementById('camera-buttons').style.display = 'block';
+            document.getElementById('photo-buttons').style.display = 'none';
+        }
+        
+        // Salvar foto
+        function savePhoto() {
+            const photo = document.getElementById('photo');
+            localStorage.setItem('contractPhoto', photo.src);
+            
+            // Parar câmera
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+            
+            hideAllReactions();
+            document.getElementById('photo-saved').style.display = 'block';
+            
+            setTimeout(() => {
+                document.getElementById('photo-section').style.display = 'none';
+                document.getElementById('photo-saved').style.display = 'none';
+                
+                // Mostrar a tela principal com a foto
+                document.getElementById('saved-photo').src = photo.src;
+                document.getElementById('photo-display').style.display = 'block';
+            }, 3000);
         }
         
         // Criar fogos de artifício
@@ -530,7 +714,6 @@
         // Tentar tocar som de sucesso
         function playSuccessSound() {
             try {
-                const audio = new Audio();
                 // Usando uma frequência simples para criar um som de "ding"
                 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 const oscillator = audioContext.createOscillator();
@@ -548,7 +731,8 @@
                 
                 oscillator.start(audioContext.currentTime);
                 oscillator.stop(audioContext.currentTime + 0.5);
-            } catch (e) {
+            } catch (err) {
+                // Erro silencioso, áudio não é crítico
                 console.log('Áudio não disponível');
             }
         }
@@ -570,17 +754,20 @@
         // Inicializar quando a página carregar
         window.addEventListener('load', () => {
             createHearts();
+            checkSavedPhoto();
             
-            // Adicionar efeito de entrada suave
-            const document_el = document.querySelector('.document');
-            document_el.style.opacity = '0';
-            document_el.style.transform = 'translateY(50px) rotate(-1deg)';
-            
-            setTimeout(() => {
-                document_el.style.transition = 'all 1s ease';
-                document_el.style.opacity = '1';
-                document_el.style.transform = 'translateY(0) rotate(-1deg)';
-            }, 500);
+            // Adicionar efeito de entrada suave apenas se o contrato estiver visível
+            const contractEl = document.getElementById('contract');
+            if (contractEl.style.display !== 'none') {
+                contractEl.style.opacity = '0';
+                contractEl.style.transform = 'translateY(50px) rotate(-1deg)';
+                
+                setTimeout(() => {
+                    contractEl.style.transition = 'all 1s ease';
+                    contractEl.style.opacity = '1';
+                    contractEl.style.transform = 'translateY(0) rotate(-1deg)';
+                }, 500);
+            }
         });
         
         // Adicionar efeito de parallax suave
