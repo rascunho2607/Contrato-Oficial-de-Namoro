@@ -351,6 +351,9 @@
                 <button class="btn btn-reject" onclick="takeNewPhoto()">
                     📸 NOVA FOTO OFICIAL 📸
                 </button>
+                <button class="btn btn-accept" onclick="downloadPhoto()" style="background: linear-gradient(45deg, #4ecdc4, #44a08d);">
+                    💾 BAIXAR FOTO ÉPICA 💾
+                </button>
             </div>
         </div>
 
@@ -648,6 +651,32 @@
                 document.getElementById('saved-photo').src = photo.src;
                 document.getElementById('photo-display').style.display = 'block';
             }, 3000);
+        }
+        
+        // Baixar foto
+        function downloadPhoto() {
+            const savedPhoto = localStorage.getItem('contractPhoto');
+            if (savedPhoto) {
+                // Criar elemento temporário para download
+                const link = document.createElement('a');
+                link.download = 'contrato-namoro-oficial-' + new Date().getTime() + '.png';
+                link.href = savedPhoto;
+                
+                // Trigger download
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                // Feedback visual
+                const originalText = event.target.innerHTML;
+                event.target.innerHTML = '✅ FOTO BAIXADA! ✅';
+                event.target.style.background = 'linear-gradient(45deg, #00b894, #00cec9)';
+                
+                setTimeout(() => {
+                    event.target.innerHTML = originalText;
+                    event.target.style.background = 'linear-gradient(45deg, #4ecdc4, #44a08d)';
+                }, 2000);
+            }
         }
         
         // Criar fogos de artifício
